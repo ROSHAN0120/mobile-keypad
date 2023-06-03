@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.0.0   CODE                                                              05/16/2023 12:11:36 PAGE 1   
+C51 COMPILER V9.60.0.0   CODE                                                              06/03/2023 13:00:50 PAGE 1   
 
 
 C51 COMPILER V9.60.0.0, COMPILATION OF MODULE CODE
@@ -19,11 +19,11 @@ line level    source
   10          void lcdinit(void);
   11          void writecmd(int);
   12          void writedata(char);
-  13          void Return(void);
-  14          char READ_SWITCHES(void);
-  15          char get_key(void);
-  16          unsigned int count = 0;
-  17          unsigned char val = 0;
+  13          
+  14          unsigned char READ_SWITCHES(void);
+  15          unsigned char get_key(void);
+  16          unsigned char count = 0;
+  17          
   18          //*******************
   19          //Pin description
   20          /*
@@ -36,711 +36,501 @@ line level    source
   27          //********************
   28          // Define Pins
   29          //********************
-  30          sbit RowA = P1^0;     //RowA
-  31          sbit RowB = P1^1;     //RowB
-  32          sbit RowC = P1^2;     //RowC
-  33          sbit RowD = P1^3;     //RowD
+  30          sbit RowA = P2^0;     //RowA
+  31          sbit RowB = P2^1;     //RowB
+  32          sbit RowC = P2^2;     //RowC
+  33          sbit RowD = P2^3;     //RowD
   34          
-  35          sbit C1   = P1^4;     //Column1
-  36          sbit C2   = P1^5;     //Column2
-  37          sbit C3   = P1^6;     //Column3
-  38          sbit C4   = P1^7;     //Column4
+  35          sbit C1   = P2^4;     //Column1
+  36          sbit C2   = P2^5;     //Column2
+  37          sbit C3   = P2^6;     //Column3
+  38          sbit C4   = P2^7;     //Column4
   39          
-  40          sbit E    = P3^6;     //E pin for LCD
-  41          sbit RS   = P3^7;     //RS pin for LCD
+  40          sbit RS    = P3^6;     //E pin for LCD
+  41          sbit E   = P3^7;     //RS pin for LCD
   42          
   43          
   44          int main(void)
   45          {
-  46   1         char key;                // key char for keeping record of pressed key
+  46   1         unsigned char key;                // key char for keeping record of pressed key
   47   1      
   48   1         cct_init();              // Make input and output pins as required
   49   1         lcdinit();               // Initilize LCD
-  50   1      
-  51   1         while(1)
-  52   1         { 
-  53   2           key = get_key();       // Get pressed key
-  54   2                
-  55   2         writedata(key);        // Echo the key pressed to LCD
-C51 COMPILER V9.60.0.0   CODE                                                              05/16/2023 12:11:36 PAGE 2   
+  50   1        TMOD = 0x20;
+  51   1        TH1 = 0xFD;
+  52   1        SCON = 0x50;
+  53   1        TR1 =1;
+  54   1         while(1)
+  55   1         { 
+C51 COMPILER V9.60.0.0   CODE                                                              06/03/2023 13:00:50 PAGE 2   
 
-  56   2         }
-  57   1      }
-  58          
-  59          
-  60          void cct_init(void)
-  61          {
-  62   1        P0 = 0x00;   //not used
-  63   1        P1 = 0xf0;   //used for generating outputs and taking inputs from Keypad
-  64   1        P2 = 0x00;   //used as data port for LCD
-  65   1        P3 = 0x00;   //used for RS and E   
-  66   1      }
-  67          
-  68          void delay(int a)
-  69          {
-  70   1         int i;
-  71   1         for(i=0;i<a;i++);   //null statement
-  72   1      }
+  56   2           key = get_key();       // Get pressed key
+  57   2        writecmd(0x01);        // Clear screen    
+  58   2        writedata(key);        // Echo the key pressed to LCD
+  59   2        SBUF =key;
+  60   2        while (T1 == 0); 
+  61   2        T1 = 0; 
+  62   2         }
+  63   1      }
+  64          
+  65          
+  66          void cct_init(void)
+  67          {
+  68   1        P2 = 0xf0;   //used for generating outputs and taking inputs from Keypad
+  69   1        P0 = 0x00;   //used as data port for LCD
+  70   1        P3 = 0x00;   //used for RS and E   
+  71   1      }
+  72          
   73          
-  74          void writedata(char t)
-  75          {
-  76   1         RS = 1;             // This is data
-  77   1         P2 = t;             //Data transfer
-  78   1         E  = 1;             // => E = 1
-  79   1         delay(150);
-  80   1         E  = 0;             // => E = 0
-  81   1         delay(150);
-  82   1      }
-  83          
-  84          
-  85          void writecmd(int z)
-  86          {
-  87   1         RS = 0;             // This is command
-  88   1         P2 = z;             //Data transfer
-  89   1         E  = 1;             // => E = 1
-  90   1         delay(150);
-  91   1         E  = 0;             // => E = 0
-  92   1         delay(150);
-  93   1      }
-  94          
-  95          void lcdinit(void)
-  96          {
-  97   1      
-  98   1           delay(15000);
-  99   1         writecmd(0x30);
- 100   1           delay(4500);
- 101   1         writecmd(0x30);
- 102   1           delay(300);
- 103   1         writecmd(0x30);
- 104   1           delay(650);
- 105   1        
- 106   1         writecmd(0x38);    //function set
- 107   1         writecmd(0x0c);    //display on,cursor off,blink off
- 108   1         writecmd(0x01);    //clear display
- 109   1         writecmd(0x06);    //entry mode, set increment
- 110   1      }
- 111          
- 112          void Return(void)     //Return to 0 location on LCD
- 113          {
- 114   1        writecmd(0x02);
- 115   1          delay(1500);
- 116   1      }
- 117          
-C51 COMPILER V9.60.0.0   CODE                                                              05/16/2023 12:11:36 PAGE 3   
+  74          
+  75          void delay( int a)
+  76          {
+  77   1         int i;
+  78   1         for(i=0;i<a;i++);   //null statement
+  79   1      }
+  80          
+  81          void writedata(unsigned char t)
+  82          {
+  83   1         RS = 1;             // This is data
+  84   1         P0 = t;             //Data transfer
+  85   1         E  = 1;             // => E = 1
+  86   1         delay(150);
+  87   1         E  = 0;             // => E = 0
+  88   1         delay(150);
+  89   1      }
+  90          
+  91          
+  92          void writecmd(int z)
+  93          {
+  94   1         RS = 0;             // This is command
+  95   1         P0 = z;             //Data transfer
+  96   1         E  = 1;             // => E = 1
+  97   1         delay(150);
+  98   1         E  = 0;             // => E = 0
+  99   1         delay(150);
+ 100   1      }
+ 101          
+ 102          void lcdinit(void)
+ 103          {
+ 104   1      
+ 105   1           delay(15000);
+ 106   1         writecmd(0x30);
+ 107   1           delay(4500);
+ 108   1       
+ 109   1         writecmd(0x38);    //function set
+ 110   1         writecmd(0x0c);    //display on,cursor off,blink off
+ 111   1         writecmd(0x01);    //clear display
+ 112   1         writecmd(0x06);    //entry mode, set increment
+ 113   1      }
+ 114          
+ 115          //void Return(void)     //Return to 0 location on LCD
+ 116          //{
+ 117            //writecmd(0x02);
+C51 COMPILER V9.60.0.0   CODE                                                              06/03/2023 13:00:50 PAGE 3   
 
- 118          
- 119          
+ 118              //delay(1500);
+ 119          //}
  120          
- 121          char READ_SWITCHES(void)  
- 122          { 
- 123   1        RowA = 0; RowB = 1; RowC = 1; RowD = 1;   
- 124   1         
- 125   1        if (C1 == 0) 
- 126   1         { 
- 127   2             count = 0 ;
- 128   2            count=count+1;
- 129   2            delay(10000);
- 130   2            if (C1 == 0)
- 131   2            {       
- 132   3               count=count+1;
- 133   3              delay(10000);
- 134   3            }
- 135   2            if (C1 == 0) 
- 136   2            {
- 137   3              count=count+1;
+ 121          
+ 122          
+ 123          
+ 124          unsigned char READ_SWITCHES(void) 
+ 125          { 
+ 126   1        RowA = 0; RowB = 1; RowC = 1; RowD = 1;   
+ 127   1        
+ 128   1      
+ 129   1         
+ 130   1        if (C1 == 0) 
+ 131   1         { 
+ 132   2             count = 0 ;
+ 133   2            
+ 134   2            delay(10000);
+ 135   2            if (C1 == 0)
+ 136   2            {       
+ 137   3               count=count+1;
  138   3              delay(10000);
  139   3            }
- 140   2            if (C1 == 0) 
- 141   2            {
- 142   3              count=count+1;
- 143   3              delay(10000);
- 144   3            }
- 145   2            if (C1 == 0) 
- 146   2            {
- 147   3              count=count+1;
- 148   3              delay(10000);
- 149   3            }
- 150   2      
- 151   2      
- 152   2           
- 153   2              switch (count)
- 154   2             {
- 155   3              case 2: return '7';break;
- 156   3              case 3 : return 'A';break;
- 157   3              case 4 : return 'A';break;
- 158   3              case 5 : return 'B';break;
- 159   3                default :return 'B';break;
- 160   3             }        
- 161   2           
- 162   2         }
- 163   1      
- 164   1      
- 165   1      
- 166   1      
- 167   1        if (C2 == 0) 
- 168   1          
- 169   1        
- 170   1        { 
- 171   2             count = 0 ;
- 172   2            count=count+1;
- 173   2            delay(10000);
- 174   2            if (C2 == 0)
- 175   2            {       
- 176   3               count=count+1;
- 177   3              delay(10000);
- 178   3            }
- 179   2            if (C2 == 0) 
-C51 COMPILER V9.60.0.0   CODE                                                              05/16/2023 12:11:36 PAGE 4   
+ 140   2          
+ 141   2      
+ 142   2           
+ 143   2              switch (count)
+ 144   2             {
+ 145   3              case 0: return '7';break;
+ 146   3              case 1 : return 'A';break;
+ 147   3                default :return 'B';break;
+ 148   3             }        
+ 149   2           
+ 150   2         }
+ 151   1      
+ 152   1      
+ 153   1      
+ 154   1      
+ 155   1        if (C2 == 0) 
+ 156   1          
+ 157   1        
+ 158   1        { 
+ 159   2             count = 0 ;
+ 160   2        
+ 161   2            delay(10000);
+ 162   2            if (C2 == 0)
+ 163   2            {       
+ 164   3               count=count+1;
+ 165   3              delay(10000);
+ 166   3            }
+ 167   2            
+ 168   2      
+ 169   2           
+ 170   2              switch (count)
+ 171   2             {
+ 172   3              case 0: return '8';break;
+ 173   3              case 1 : return 'C';break;
+ 174   3              
+ 175   3        
+ 176   3              default :return 'D';break;
+ 177   3             }        
+ 178   2           
+ 179   2         }
+C51 COMPILER V9.60.0.0   CODE                                                              06/03/2023 13:00:50 PAGE 4   
 
- 180   2            {
- 181   3              count=count+1;
- 182   3              delay(10000);
- 183   3            }
- 184   2            if (C2 == 0) 
- 185   2            {
- 186   3              count=count+1;
- 187   3              delay(10000);
- 188   3            }
- 189   2            if (C2 == 0) 
- 190   2            {
- 191   3              count=count+1;
- 192   3              delay(10000);
- 193   3            }
- 194   2      
- 195   2      
- 196   2           
- 197   2              switch (count)
- 198   2             {
- 199   3              case 2: return '8';break;
- 200   3              case 3 : return 'C';break;
- 201   3              case 4 : return 'C';break;
- 202   3              case 5 : return 'D';break;
- 203   3              default :return 'D';break;
- 204   3             }        
- 205   2           
- 206   2         }
- 207   1      
- 208   1        
- 209   1         
- 210   1         
+ 180   1      
+ 181   1        
+ 182   1         
+ 183   1         
+ 184   1         
+ 185   1        if (C3 == 0) 
+ 186   1          
+ 187   1        
+ 188   1         { 
+ 189   2             count = 0 ;
+ 190   2       
+ 191   2            delay(10000);
+ 192   2            if (C3 == 0)
+ 193   2            {       
+ 194   3               count=count+1;
+ 195   3              delay(10000);
+ 196   3            }
+ 197   2            
+ 198   2      
+ 199   2           
+ 200   2              switch (count)
+ 201   2             {
+ 202   3              case 0: return '9';break;
+ 203   3              case 1 : return 'E';break;
+ 204   3              
+ 205   3              
+ 206   3              default :return 'F';break;
+ 207   3             }        
+ 208   2           
+ 209   2         }
+ 210   1      
  211   1         
- 212   1        if (C3 == 0) 
- 213   1          
- 214   1        
- 215   1         { 
- 216   2             count = 0 ;
- 217   2            count=count+1;
- 218   2            delay(10000);
- 219   2            if (C3 == 0)
- 220   2            {       
- 221   3               count=count+1;
- 222   3              delay(10000);
- 223   3            }
- 224   2            if (C3 == 0) 
- 225   2            {
- 226   3              count=count+1;
- 227   3              delay(10000);
- 228   3            }
- 229   2            if (C3 == 0) 
- 230   2            {
- 231   3              count=count+1;
- 232   3              delay(10000);
- 233   3            }
- 234   2            if (C3 == 0) 
- 235   2            {
- 236   3              count=count+1;
- 237   3              delay(10000);
- 238   3            }
- 239   2      
- 240   2      
- 241   2           
-C51 COMPILER V9.60.0.0   CODE                                                              05/16/2023 12:11:36 PAGE 5   
+ 212   1         
+ 213   1        if (C4 == 0) 
+ 214   1          
+ 215   1        
+ 216   1        
+ 217   1       { 
+ 218   2             count = 0 ;
+ 219   2        
+ 220   2            delay(10000);
+ 221   2            if (C4 == 0)
+ 222   2            {       
+ 223   3               count=count+1;
+ 224   3              delay(10000);
+ 225   3            }
+ 226   2        
+ 227   2           
+ 228   2              switch (count)
+ 229   2             {
+ 230   3              case 0: return '/';break;
+ 231   3              case 1 : return 'G';break;
+ 232   3              
+ 233   3            
+ 234   3              default :return 'H';break;
+ 235   3             }        
+ 236   2           
+ 237   2         }
+ 238   1      
+ 239   1      
+ 240   1        RowA = 1; RowB = 0; RowC = 1; RowD = 1;   
+ 241   1      
+C51 COMPILER V9.60.0.0   CODE                                                              06/03/2023 13:00:50 PAGE 5   
 
- 242   2              switch (count)
- 243   2             {
- 244   3              case 2: return '9';break;
- 245   3              case 3 : return 'E';break;
- 246   3              case 4 : return 'E';break;
- 247   3              case 5 : return 'F';break;
- 248   3              default :return 'F';break;
- 249   3             }        
- 250   2           
- 251   2         }
- 252   1      
- 253   1         
- 254   1         
- 255   1        if (C4 == 0) 
- 256   1          
- 257   1        
- 258   1        
- 259   1       { 
- 260   2             count = 0 ;
- 261   2            count=count+1;
- 262   2            delay(10000);
- 263   2            if (C4 == 0)
- 264   2            {       
- 265   3               count=count+1;
- 266   3              delay(10000);
- 267   3            }
- 268   2            if (C4 == 0) 
- 269   2            {
- 270   3              count=count+1;
- 271   3              delay(10000);
- 272   3            }
- 273   2            if (C4 == 0) 
- 274   2            {
- 275   3              count=count+1;
- 276   3              delay(10000);
- 277   3            }
- 278   2            if (C4 == 0) 
- 279   2            {
- 280   3              count=count+1;
- 281   3              delay(10000);
- 282   3            }
- 283   2      
- 284   2      
- 285   2           
- 286   2              switch (count)
- 287   2             {
- 288   3              case 2: return '/';break;
- 289   3              case 3 : return 'G';break;
- 290   3              case 4 : return 'G';break;
- 291   3              case 5 : return 'H';break;
- 292   3              default :return 'H';break;
- 293   3             }        
- 294   2           
- 295   2         }
- 296   1      
- 297   1      
- 298   1        RowA = 1; RowB = 0; RowC = 1; RowD = 1;   
- 299   1      
- 300   1        if (C1 == 0) 
- 301   1         { 
- 302   2             count = 0 ;
- 303   2            count=count+1;
-C51 COMPILER V9.60.0.0   CODE                                                              05/16/2023 12:11:36 PAGE 6   
+ 242   1        if (C1 == 0) 
+ 243   1         { 
+ 244   2             count = 0 ;
+ 245   2      
+ 246   2            delay(10000);
+ 247   2            if (C1 == 0)
+ 248   2            {       
+ 249   3               count=count+1;
+ 250   3              delay(10000);
+ 251   3            }
+ 252   2            
+ 253   2      
+ 254   2              switch (count)
+ 255   2             {
+ 256   3              case 0: return '4';break;
+ 257   3              case 1 : return 'I';break;
+ 258   3      
+ 259   3                default :return 'J';break;
+ 260   3             }        
+ 261   2           
+ 262   2         }
+ 263   1      
+ 264   1         
+ 265   1         
+ 266   1         
+ 267   1        if (C2 == 0) 
+ 268   1          
+ 269   1        
+ 270   1        { 
+ 271   2             count = 0 ;
+ 272   2         
+ 273   2            delay(10000);
+ 274   2            if (C2 == 0)
+ 275   2            {       
+ 276   3               count=count+1;
+ 277   3              delay(10000);
+ 278   3            }
+ 279   2        
+ 280   2      
+ 281   2           
+ 282   2              switch (count)
+ 283   2             {
+ 284   3              case 0: return '5';break;
+ 285   3              case 1 : return 'K';break;
+ 286   3              
+ 287   3                  default :return 'L';break;
+ 288   3             }        
+ 289   2           
+ 290   2         }
+ 291   1      
+ 292   1         
+ 293   1         
+ 294   1        if (C3 == 0) 
+ 295   1          
+ 296   1        
+ 297   1         { 
+ 298   2             count = 0 ;
+ 299   2      
+ 300   2            delay(10000);
+ 301   2            if (C3 == 0)
+ 302   2            {       
+ 303   3               count=count+1;
+C51 COMPILER V9.60.0.0   CODE                                                              06/03/2023 13:00:50 PAGE 6   
 
- 304   2            delay(10000);
- 305   2            if (C1 == 0)
- 306   2            {       
- 307   3               count=count+1;
- 308   3              delay(10000);
- 309   3            }
- 310   2            if (C1 == 0) 
- 311   2            {
- 312   3              count=count+1;
- 313   3              delay(10000);
- 314   3            }
- 315   2            if (C1 == 0) 
- 316   2            {
- 317   3              count=count+1;
- 318   3              delay(10000);
- 319   3            }
- 320   2            if (C1 == 0) 
- 321   2            {
- 322   3              count=count+1;
- 323   3              delay(10000);
- 324   3            }
- 325   2      
+ 304   3              delay(10000);
+ 305   3            }
+ 306   2          
+ 307   2          
+ 308   2           
+ 309   2              switch (count)
+ 310   2             {
+ 311   3              case 0: return '6';break;
+ 312   3              case 1 : return 'M';break;
+ 313   3            
+ 314   3              default :return 'N';break;
+ 315   3             }        
+ 316   2           
+ 317   2         }
+ 318   1      
+ 319   1      
+ 320   1         if (C4 == 0) 
+ 321   1          
+ 322   1        
+ 323   1        
+ 324   1       { 
+ 325   2             count = 0 ;
  326   2      
- 327   2           
- 328   2              switch (count)
- 329   2             {
- 330   3              case 2: return '4';break;
- 331   3              case 3 : return 'I';break;
- 332   3              case 4 : return 'I';break;
- 333   3              case 5 : return 'J';break;
- 334   3                default :return 'J';break;
- 335   3             }        
- 336   2           
- 337   2         }
- 338   1      
- 339   1         
- 340   1         
- 341   1         
- 342   1        if (C2 == 0) 
- 343   1          
+ 327   2            delay(10000);
+ 328   2            if (C4 == 0)
+ 329   2            {       
+ 330   3               count=count+1;
+ 331   3              delay(10000);
+ 332   3            }
+ 333   2          
+ 334   2           
+ 335   2              switch (count)
+ 336   2             {
+ 337   3              case 0: return '*';break;
+ 338   3              case 1 : return 'O';break;
+ 339   3      
+ 340   3              default :return 'P';break;
+ 341   3             }        
+ 342   2           
+ 343   2         }
  344   1        
- 345   1        { 
- 346   2             count = 0 ;
- 347   2            count=count+1;
- 348   2            delay(10000);
- 349   2            if (C2 == 0)
- 350   2            {       
- 351   3               count=count+1;
- 352   3              delay(10000);
- 353   3            }
- 354   2            if (C2 == 0) 
- 355   2            {
- 356   3              count=count+1;
- 357   3              delay(10000);
- 358   3            }
- 359   2            if (C2 == 0) 
- 360   2            {
- 361   3              count=count+1;
- 362   3              delay(10000);
- 363   3            }
- 364   2            if (C2 == 0) 
- 365   2            {
-C51 COMPILER V9.60.0.0   CODE                                                              05/16/2023 12:11:36 PAGE 7   
+ 345   1        RowA = 1; RowB = 1; RowC = 0; RowD = 1;   
+ 346   1      
+ 347   1      
+ 348   1         if (C1 == 0) 
+ 349   1         { 
+ 350   2             count = 0 ;
+ 351   2      
+ 352   2            delay(10000);
+ 353   2            if (C1 == 0)
+ 354   2            {       
+ 355   3               count=count+1;
+ 356   3              delay(10000);
+ 357   3            }
+ 358   2        
+ 359   2          
+ 360   2           
+ 361   2              switch (count)
+ 362   2             {
+ 363   3              case 0: return '1';break;
+ 364   3              case 1 : return 'Q';break;
+ 365   3      
+C51 COMPILER V9.60.0.0   CODE                                                              06/03/2023 13:00:50 PAGE 7   
 
- 366   3              count=count+1;
- 367   3              delay(10000);
- 368   3            }
- 369   2      
- 370   2      
- 371   2           
- 372   2              switch (count)
- 373   2             {
- 374   3              case 2: return '5';break;
- 375   3              case 3 : return 'K';break;
- 376   3              case 4 : return 'K';break;
- 377   3              case 5 : return 'L';break;
- 378   3              default :return 'L';break;
- 379   3             }        
- 380   2           
- 381   2         }
- 382   1      
- 383   1         
- 384   1         
- 385   1        if (C3 == 0) 
- 386   1          
- 387   1        
- 388   1         { 
- 389   2             count = 0 ;
- 390   2            count=count+1;
- 391   2            delay(10000);
- 392   2            if (C3 == 0)
- 393   2            {       
- 394   3               count=count+1;
- 395   3              delay(10000);
- 396   3            }
- 397   2            if (C3 == 0) 
- 398   2            {
- 399   3              count=count+1;
- 400   3              delay(10000);
- 401   3            }
- 402   2            if (C3 == 0) 
- 403   2            {
- 404   3              count=count+1;
- 405   3              delay(10000);
- 406   3            }
- 407   2            if (C3 == 0) 
- 408   2            {
- 409   3              count=count+1;
+ 366   3                default :return 'R';break;
+ 367   3             }        
+ 368   2           
+ 369   2         }
+ 370   1      
+ 371   1         
+ 372   1         
+ 373   1         
+ 374   1        if (C2 == 0) 
+ 375   1          
+ 376   1        
+ 377   1        { 
+ 378   2             count = 0 ;
+ 379   2      
+ 380   2            delay(10000);
+ 381   2            if (C2 == 0)
+ 382   2            {       
+ 383   3               count=count+1;
+ 384   3              delay(10000);
+ 385   3            }
+ 386   2        
+ 387   2            
+ 388   2              switch (count)
+ 389   2             {
+ 390   3              case 0: return '2';break;
+ 391   3              case 1 : return 'S';break;
+ 392   3      
+ 393   3              default :return 'T';break;
+ 394   3             }        
+ 395   2           
+ 396   2         }
+ 397   1      
+ 398   1         
+ 399   1         
+ 400   1        if (C3 == 0) 
+ 401   1          
+ 402   1        
+ 403   1         { 
+ 404   2             count = 0 ;
+ 405   2      
+ 406   2            delay(10000);
+ 407   2            if (C3 == 0)
+ 408   2            {       
+ 409   3               count=count+1;
  410   3              delay(10000);
  411   3            }
- 412   2      
- 413   2      
- 414   2           
- 415   2              switch (count)
- 416   2             {
- 417   3              case 2: return '6';break;
- 418   3              case 3 : return 'M';break;
- 419   3              case 4 : return 'M';break;
- 420   3              case 5 : return 'N';break;
- 421   3              default :return 'N';break;
+ 412   2          
+ 413   2        
+ 414   2      
+ 415   2           
+ 416   2              switch (count)
+ 417   2             {
+ 418   3              case 0: return '3';break;
+ 419   3              case 1 : return 'U';break;
+ 420   3      
+ 421   3              default :return 'V';break;
  422   3             }        
  423   2           
  424   2         }
  425   1      
- 426   1        if (C4 == 0) 
+ 426   1        
  427   1         if (C4 == 0) 
-C51 COMPILER V9.60.0.0   CODE                                                              05/16/2023 12:11:36 PAGE 8   
+C51 COMPILER V9.60.0.0   CODE                                                              06/03/2023 13:00:50 PAGE 8   
 
  428   1          
  429   1        
  430   1        
  431   1       { 
  432   2             count = 0 ;
- 433   2            count=count+1;
+ 433   2      
  434   2            delay(10000);
  435   2            if (C4 == 0)
  436   2            {       
  437   3               count=count+1;
  438   3              delay(10000);
  439   3            }
- 440   2            if (C4 == 0) 
- 441   2            {
- 442   3              count=count+1;
- 443   3              delay(10000);
- 444   3            }
- 445   2            if (C4 == 0) 
- 446   2            {
- 447   3              count=count+1;
- 448   3              delay(10000);
- 449   3            }
- 450   2            if (C4 == 0) 
- 451   2            {
- 452   3              count=count+1;
- 453   3              delay(10000);
- 454   3            }
- 455   2      
- 456   2      
- 457   2           
- 458   2              switch (count)
- 459   2             {
- 460   3              case 2: return '*';break;
- 461   3              case 3 : return 'O';break;
- 462   3              case 4 : return 'O';break;
- 463   3              case 5 : return 'P';break;
- 464   3              default :return 'P';break;
- 465   3             }        
- 466   2           
- 467   2         }
- 468   1        
- 469   1        RowA = 1; RowB = 1; RowC = 0; RowD = 1;   
- 470   1      
- 471   1      
- 472   1         if (C1 == 0) 
- 473   1         { 
- 474   2             count = 0 ;
- 475   2            count=count+1;
- 476   2            delay(10000);
- 477   2            if (C1 == 0)
- 478   2            {       
- 479   3               count=count+1;
- 480   3              delay(10000);
- 481   3            }
- 482   2            if (C1 == 0) 
- 483   2            {
- 484   3              count=count+1;
- 485   3              delay(10000);
- 486   3            }
- 487   2            if (C1 == 0) 
- 488   2            {
- 489   3              count=count+1;
-C51 COMPILER V9.60.0.0   CODE                                                              05/16/2023 12:11:36 PAGE 9   
+ 440   2      
+ 441   2        
+ 442   2           
+ 443   2              switch (count)
+ 444   2             {
+ 445   3              case 0: return '-';break;
+ 446   3              case 1 : return 'W';break;
+ 447   3      
+ 448   3              default :return 'X';break;
+ 449   3             }        
+ 450   2           
+ 451   2         }
+ 452   1         
+ 453   1         
+ 454   1        
+ 455   1        RowA = 1; RowB = 1; RowC = 1; RowD = 0;   //Test Row D
+ 456   1      
+ 457   1        if (C1 == 0) 
+ 458   1         { delay(10000); while (C1==0); writecmd(0x01); }
+ 459   1        if (C2 == 0) 
+ 460   1          
+ 461   1        
+ 462   1        { 
+ 463   2             count = 0 ;
+ 464   2      
+ 465   2            delay(10000);
+ 466   2            if (C2 == 0)
+ 467   2            {       
+ 468   3               count=count+1;
+ 469   3              delay(10000);
+ 470   3            }
+ 471   2            
+ 472   2      
+ 473   2           
+ 474   2              switch (count)
+ 475   2             {
+ 476   3              case 0: return '0';break;
+ 477   3              case 1 : return 'Y';break;
+ 478   3      
+ 479   3              default :return 'Z';break;
+ 480   3             }        
+ 481   2           
+ 482   2         }
+ 483   1      
+ 484   1        if (C3 == 0) 
+ 485   1         { delay(10000); while (C3==0); return '='; }
+ 486   1        if (C4 == 0) 
+ 487   1         { delay(10000); while (C4==0); return '+'; }
+ 488   1      
+ 489   1        return 'n';             // Means no key has been pressed
+C51 COMPILER V9.60.0.0   CODE                                                              06/03/2023 13:00:50 PAGE 9   
 
- 490   3              delay(10000);
- 491   3            }
- 492   2            if (C1 == 0) 
- 493   2            {
- 494   3              count=count+1;
- 495   3              delay(10000);
- 496   3            }
- 497   2      
- 498   2      
- 499   2           
- 500   2              switch (count)
- 501   2             {
- 502   3              case 2: return '1';break;
- 503   3              case 3 : return 'Q';break;
- 504   3              case 4 : return 'Q';break;
- 505   3              case 5 : return 'R';break;
- 506   3                default :return 'R';break;
- 507   3             }        
- 508   2           
- 509   2         }
- 510   1      
- 511   1         
- 512   1         
- 513   1         
- 514   1        if (C2 == 0) 
- 515   1          
- 516   1        
- 517   1        { 
- 518   2             count = 0 ;
- 519   2            count=count+1;
- 520   2            delay(10000);
- 521   2            if (C2 == 0)
- 522   2            {       
- 523   3               count=count+1;
- 524   3              delay(10000);
- 525   3            }
- 526   2            if (C2 == 0) 
- 527   2            {
- 528   3              count=count+1;
- 529   3              delay(10000);
- 530   3            }
- 531   2            if (C2 == 0) 
- 532   2            {
- 533   3              count=count+1;
- 534   3              delay(10000);
- 535   3            }
- 536   2            if (C2 == 0) 
- 537   2            {
- 538   3              count=count+1;
- 539   3              delay(10000);
- 540   3            }
- 541   2      
- 542   2      
- 543   2           
- 544   2              switch (count)
- 545   2             {
- 546   3              case 2: return '2';break;
- 547   3              case 3 : return 'S';break;
- 548   3              case 4 : return 'S';break;
- 549   3              case 5 : return 'T';break;
- 550   3              default :return 'T';break;
- 551   3             }        
-C51 COMPILER V9.60.0.0   CODE                                                              05/16/2023 12:11:36 PAGE 10  
-
- 552   2           
- 553   2         }
- 554   1      
- 555   1         
- 556   1         
- 557   1        if (C3 == 0) 
- 558   1          
- 559   1        
- 560   1         { 
- 561   2             count = 0 ;
- 562   2            count=count+1;
- 563   2            delay(10000);
- 564   2            if (C3 == 0)
- 565   2            {       
- 566   3               count=count+1;
- 567   3              delay(10000);
- 568   3            }
- 569   2            if (C3 == 0) 
- 570   2            {
- 571   3              count=count+1;
- 572   3              delay(10000);
- 573   3            }
- 574   2            if (C3 == 0) 
- 575   2            {
- 576   3              count=count+1;
- 577   3              delay(10000);
- 578   3            }
- 579   2            if (C3 == 0) 
- 580   2            {
- 581   3              count=count+1;
- 582   3              delay(10000);
- 583   3            }
- 584   2      
- 585   2      
- 586   2           
- 587   2              switch (count)
- 588   2             {
- 589   3              case 2: return '3';break;
- 590   3              case 3 : return 'U';break;
- 591   3              case 4 : return 'U';break;
- 592   3              case 5 : return 'V';break;
- 593   3              default :return 'V';break;
- 594   3             }        
- 595   2           
- 596   2         }
- 597   1      
- 598   1        if (C4 == 0) 
- 599   1         if (C4 == 0) 
- 600   1          
- 601   1        
- 602   1        
- 603   1       { 
- 604   2             count = 0 ;
- 605   2            count=count+1;
- 606   2            delay(10000);
- 607   2            if (C4 == 0)
- 608   2            {       
- 609   3               count=count+1;
- 610   3              delay(10000);
- 611   3            }
- 612   2            if (C4 == 0) 
- 613   2            {
-C51 COMPILER V9.60.0.0   CODE                                                              05/16/2023 12:11:36 PAGE 11  
-
- 614   3              count=count+1;
- 615   3              delay(10000);
- 616   3            }
- 617   2            if (C4 == 0) 
- 618   2            {
- 619   3              count=count+1;
- 620   3              delay(10000);
- 621   3            }
- 622   2            if (C4 == 0) 
- 623   2            {
- 624   3              count=count+1;
- 625   3              delay(10000);
- 626   3            }
- 627   2      
- 628   2      
- 629   2           
- 630   2              switch (count)
- 631   2             {
- 632   3              case 2: return '-';break;
- 633   3              case 3 : return 'W';break;
- 634   3              case 4 : return 'W';break;
- 635   3              case 5 : return 'X';break;
- 636   3              default :return 'X';break;
- 637   3             }        
- 638   2           
- 639   2         }
- 640   1         
- 641   1         
- 642   1        
- 643   1        RowA = 1; RowB = 1; RowC = 1; RowD = 0;   //Test Row D
- 644   1      
- 645   1        if (C1 == 0) 
- 646   1         { delay(10000); while (C1==0); writecmd(0x01); }
- 647   1        if (C2 == 0) 
- 648   1          
- 649   1        
- 650   1        { 
- 651   2             count = 0 ;
- 652   2            count=count+1;
- 653   2            delay(10000);
- 654   2            if (C2 == 0)
- 655   2            {       
- 656   3               count=count+1;
- 657   3              delay(10000);
- 658   3            }
- 659   2            if (C2 == 0) 
- 660   2            {
- 661   3              count=count+1;
- 662   3              delay(10000);
- 663   3            }
- 664   2            if (C2 == 0) 
- 665   2            {
- 666   3              count=count+1;
- 667   3              delay(10000);
- 668   3            }
- 669   2            if (C2 == 0) 
- 670   2            {
- 671   3              count=count+1;
- 672   3              delay(10000);
- 673   3            }
- 674   2      
- 675   2      
-C51 COMPILER V9.60.0.0   CODE                                                              05/16/2023 12:11:36 PAGE 12  
-
- 676   2           
- 677   2              switch (count)
- 678   2             {
- 679   3              case 2: return '0';break;
- 680   3              case 3 : return 'Y';break;
- 681   3              case 4 : return 'Y';break;
- 682   3              case 5 : return 'Z';break;
- 683   3              default :return 'Z';break;
- 684   3             }        
- 685   2           
- 686   2         }
- 687   1      
- 688   1        if (C3 == 0) 
- 689   1         { delay(10000); while (C3==0); return '='; }
- 690   1        if (C4 == 0) 
- 691   1         { delay(10000); while (C4==0); return '+'; }
- 692   1      
- 693   1        return 'n';             // Means no key has been pressed
- 694   1      }
- 695          
- 696          char get_key(void)           //get key from user
- 697          {
- 698   1        char key = 'n';              //assume no key pressed
- 699   1      
- 700   1        while(key=='n')              //wait untill a key is pressed
- 701   1          key = READ_SWITCHES();   //scan the keys again and again
- 702   1      
- 703   1        return key;                  //when key pressed then return its value
- 704   1      }
+ 490   1      }
+ 491          
+ 492          unsigned char get_key(void)           //get key from user
+ 493          {
+ 494   1        char key = 'n';              //assume no key pressed
+ 495   1      
+ 496   1        while(key=='n')              //wait untill a key is pressed
+ 497   1          key = READ_SWITCHES();   //scan the keys again and again
+ 498   1      
+ 499   1        return key;                  //when key pressed then return its value
+ 500   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   1693    ----
+   CODE SIZE        =    650    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =      3       1
+   DATA SIZE        =      1       1
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.
