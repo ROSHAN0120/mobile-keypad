@@ -1,8 +1,5 @@
 #include<reg51.h>
 
-
-
-
 //Function declarations
 void cct_init(void);
 void delay(int);
@@ -15,7 +12,6 @@ unsigned char READ_SWITCHES(void);
 unsigned char get_key(void);
 unsigned char count = 0;
 
-//*******************
 //Pin description
 /*
 P2 is data bus
@@ -24,45 +20,40 @@ P3.6 is E
 P1.0 to P1.3 are keypad row outputs
 P1.4 to P1.7 are keypad column inputs
 */
-//********************
-// Define Pins
-//********************
-sbit RowA = P2^0;     //RowA
-sbit RowB = P2^1;     //RowB
-sbit RowC = P2^2;     //RowC
-sbit RowD = P2^3;     //RowD
 
-sbit C1   = P2^4;     //Column1
-sbit C2   = P2^5;     //Column2
-sbit C3   = P2^6;     //Column3
-sbit C4   = P2^7;     //Column4
+sbit RowA = P2^0;     
+sbit RowB = P2^1;     
+sbit RowC = P2^2;     
+sbit RowD = P2^3;     
 
-sbit RS    = P3^6;     //E pin for LCD
-sbit E   = P3^7;     //RS pin for LCD
+sbit C1   = P2^4;     
+sbit C2   = P2^5;     
+sbit C3   = P2^6;     
+sbit C4   = P2^7;     
+
+sbit RS    = P3^6;     
+sbit E   = P3^7;     
 
 
 void main(void)
 {
    unsigned char key;                // key char for keeping record of pressed key
-
    cct_init();              // Make input and output pins as required
    lcdinit();               // Initilize LCD
 //serial() ;
    while(1)
-   {
-
-     key = get_key();
+   { key = get_key();
       {
-TMOD = 0x20;
-TH1 = 0xFD;
-SCON = 0x50;
-TR1 =1;
+         TMOD = 0x20;
+         TH1 = 0xFD;
+         SCON = 0x50;
+         TR1 =1;
 
-SBUF =key;
-while (TI == 0);
-TI = 0;
+         SBUF =key;
+         while (TI == 0);
+         TI = 0;
 
-}// Get pressed key
+}
 writecmd(0x01);        // Clear screen    
 writedata(key);        // Echo the key pressed to LCD
  
